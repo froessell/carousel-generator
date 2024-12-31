@@ -25,6 +25,7 @@ import {
   Palette,
   Plus,
   Type,
+  LayoutTemplate,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Drawer } from "vaul";
@@ -38,6 +39,7 @@ import { set } from "zod";
 import { StyleMenu } from "@/components/style-menu";
 import { useFormContext } from "react-hook-form";
 import { DocumentFormReturn } from "@/lib/document-form-types";
+import { SizeForm } from "@/components/forms/size-form";
 
 type TabInfo = {
   name: string;
@@ -65,6 +67,11 @@ const ALL_FORMS: Record<string, TabInfo> = {
     name: "Numbers",
     value: "number",
     icon: FileDigit,
+  },
+  size: {
+    name: "Size",
+    value: "size",
+    icon: LayoutTemplate,
   },
 };
 
@@ -162,6 +169,7 @@ export function SidebarTabsPanel() {
             <VerticalTabTriggerButton tabInfo={ALL_FORMS.theme} />
             <VerticalTabTriggerButton tabInfo={ALL_FORMS.fonts} />
             <VerticalTabTriggerButton tabInfo={ALL_FORMS.pageNumber} />
+            <VerticalTabTriggerButton tabInfo={ALL_FORMS.size} />
           </VerticalTabsList>
         </ScrollArea>
         <div className="p-2 flex flex-col items-stretch w-full ">
@@ -204,6 +212,14 @@ export function SidebarTabsPanel() {
             <Separator className="mt-2 mb-4"></Separator>
             <PageNumberForm />
           </VerticalTabsContent>
+          <VerticalTabsContent
+            value={ALL_FORMS.size.value}
+            className="mt-0 border-0 p-0 m-4"
+          >
+            <h4 className="text-xl font-semibold">{ALL_FORMS.size.name}</h4>
+            <Separator className="mt-2 mb-4"></Separator>
+            <SizeForm />
+          </VerticalTabsContent>
         </div>
       </div>
     </VerticalTabs>
@@ -228,11 +244,12 @@ export function DrawerFormsPanel({ className }: { className: string }) {
     >
       <div className="flex flex-col h-full ">
         <ScrollArea className=" border-b h-full bg-muted">
-          <TabsList className="grid grid-cols-4 gap-2 h-20 rounded-none">
+          <TabsList className="grid grid-cols-5 gap-2 h-20 rounded-none">
             <HorizontalTabTriggerButton tabInfo={ALL_FORMS.brand} />
             <HorizontalTabTriggerButton tabInfo={ALL_FORMS.theme} />
             <HorizontalTabTriggerButton tabInfo={ALL_FORMS.fonts} />
             <HorizontalTabTriggerButton tabInfo={ALL_FORMS.pageNumber} />
+            <HorizontalTabTriggerButton tabInfo={ALL_FORMS.size} />
           </TabsList>
         </ScrollArea>
         <div className="p-2 w-[320px] m-auto">
@@ -270,6 +287,14 @@ export function DrawerFormsPanel({ className }: { className: string }) {
             </h4>
             <Separator className="mt-2 mb-4"></Separator>
             <PageNumberForm />
+          </TabsContent>
+          <TabsContent
+            value={ALL_FORMS.size.value}
+            className="mt-0 border-0 p-0 m-4"
+          >
+            <h4 className="text-xl font-semibold">{ALL_FORMS.size.name}</h4>
+            <Separator className="mt-2 mb-4"></Separator>
+            <SizeForm />
           </TabsContent>
         </div>
       </div>

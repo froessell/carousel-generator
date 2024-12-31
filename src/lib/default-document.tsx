@@ -36,6 +36,11 @@ export const defaultValues = {
     pageNumber: {
       showNumbers: true,
     },
+    size: {
+      aspectRatio: "landscape43",
+      width: 800,
+      height: 600,
+    },
   },
   filename: "My Carousel File",
 };

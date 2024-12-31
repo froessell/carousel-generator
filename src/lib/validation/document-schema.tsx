@@ -4,12 +4,14 @@ import { ThemeSchema } from "./theme-schema";
 import { BrandSchema } from "./brand-schema";
 import { FontsSchema } from "./fonts-schema";
 import { PageNumberSchema } from "./page-number-schema";
+import { SizeSchema } from "./size-schema";
 
 export const ConfigSchema = z.object({
   brand: BrandSchema,
   theme: ThemeSchema,
   fonts: FontsSchema,
   pageNumber: PageNumberSchema,
+  size: SizeSchema,
 });
 
 export const DocumentSchema = z.object({

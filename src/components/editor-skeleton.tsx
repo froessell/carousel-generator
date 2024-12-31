@@ -5,18 +5,20 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SIZE } from "@/lib/page-size";
+import { usePageSize } from "@/lib/page-size";
 import { cn } from "@/lib/utils";
 
 function SlideSkeleton({ className }: { className?: string }) {
+  const pageSize = usePageSize();
+  
   return (
     <Card
       className={cn("flex flex-col gap-12 ", className)}
       style={{
-        width: `${SIZE.width}px`,
-        height: `${SIZE.height}px`,
-        minWidth: `${SIZE.width}px`,
-        minHeight: `${SIZE.height}px`,
+        width: `${pageSize.width}px`,
+        height: `${pageSize.height}px`,
+        minWidth: `${pageSize.width}px`,
+        minHeight: `${pageSize.height}px`,
       }}
     >
       <CardHeader className="gap-2">
@@ -41,6 +43,24 @@ export function DocumentSkeleton() {
       <SlideSkeleton />
       <SlideSkeleton className="hidden lg:flex" />
       <SlideSkeleton className="hidden 2xl:flex" />
+    </div>
+  );
+}
+
+export function EditorSkeleton() {
+  const pageSize = usePageSize();
+  
+  return (
+    <div
+      className="relative bg-muted rounded-lg"
+      style={{
+        width: `${pageSize.width}px`,
+        height: `${pageSize.height}px`,
+        minWidth: `${pageSize.width}px`,
+        minHeight: `${pageSize.height}px`,
+      }}
+    >
+      {/* ... rest of the component ... */}
     </div>
   );
 }

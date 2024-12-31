@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -17,12 +16,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import { Sparkles } from "lucide-react";
-import { generateCarouselSlides } from "@/lib/langchain";
 import { DocumentFormReturn } from "@/lib/document-form-types";
 import { useState } from "react";
 import { LoadingSpinner } from "@/components/loading-spinner";
-import { useKeys } from "@/lib/hooks/use-keys";
-import { useKeysContext } from "@/lib/providers/keys-context";
 import { useStatusContext } from "@/lib/providers/editor-status-context";
 import { generateCarouselSlidesAction } from "@/app/actions";
 
@@ -33,8 +29,7 @@ const FormSchema = z.object({
 });
 
 export function AIInputForm() {
-  const { apiKey } = useKeysContext();
-  const { setValue }: DocumentFormReturn = useFormContext(); // retrieve those props
+  const { setValue }: DocumentFormReturn = useFormContext();
   const [isLoading, setIsLoading] = useState(false);
   const { status, setStatus } = useStatusContext();
 
@@ -53,13 +48,8 @@ export function AIInputForm() {
       `A carousel with about "${data.prompt}"`
     );
 
-    // const generatedSlides = await generateCarouselSlides(
-    //   `A carousel with about "${data.prompt}"`,
-    //   apiKey
-    // );
     if (generatedSlides) {
       setValue("slides", generatedSlides);
-      // TODO Fix toast not working
       toast({
         title: "New carousel generated",
       });
@@ -96,8 +86,7 @@ export function AIInputForm() {
                       <LoadingSpinner />
                     ) : (
                       <span className="flex flex-row gap-1.5">
-                        {" "}
-                        <Sparkles className="w-4 h-4" /> Generate{" "}
+                        <Sparkles className="w-4 h-4" /> Generate
                       </span>
                     )}
                   </Button>

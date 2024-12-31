@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -16,12 +15,10 @@ import {
 } from "@/components/ui/form";
 import { toast } from "@/components/ui/use-toast";
 import { Sparkles } from "lucide-react";
-import { generateCarouselSlides } from "@/lib/langchain";
 import { DocumentFormReturn } from "@/lib/document-form-types";
 import { useState } from "react";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { Textarea } from "@/components/ui/textarea";
-import { useKeysContext } from "@/lib/providers/keys-context";
 import { generateCarouselSlidesAction } from "@/app/actions";
 
 const FormSchema = z.object({
@@ -31,9 +28,9 @@ const FormSchema = z.object({
 });
 
 export function AITextAreaForm() {
-  const { apiKey } = useKeysContext();
-  const { setValue }: DocumentFormReturn = useFormContext(); // retrieve those props
+  const { setValue }: DocumentFormReturn = useFormContext();
   const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -44,20 +41,12 @@ export function AITextAreaForm() {
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsLoading(true);
 
-    // Use server action here instead of the local function
     const generatedSlides = await generateCarouselSlidesAction(
-      `Generate a carousel from this article: "${data.prompt}"`
+      `Convert this article into a carousel: "${data.prompt}"`
     );
-
-    // TODO: Restore local function for going over limit
-    // const generatedSlides = await generateCarouselSlides(
-    //   `Generate a carousel from this article: "${data.prompt}"`,
-    //   apiKey
-    // );
 
     if (generatedSlides) {
       setValue("slides", generatedSlides);
-      // TODO Fix toast not working
       toast({
         title: "New carousel generated",
       });
@@ -80,21 +69,20 @@ export function AITextAreaForm() {
           name="prompt"
           render={({ field }) => (
             <FormItem>
-              <FormLabel></FormLabel>
+              <FormLabel>Convert article into carousel</FormLabel>
               <FormControl>
-                <div className="flex flex-row gap-2 items-center w-full">
+                <div className="flex flex-col gap-2 items-stretch w-full">
                   <Textarea
-                    placeholder="An article with content for your carousel"
-                    className="flex-1"
+                    placeholder="Paste your article here"
                     {...field}
+                    className="flex-1"
                   />
                   <Button type="submit" className="flex-0">
                     {isLoading ? (
                       <LoadingSpinner />
                     ) : (
                       <span className="flex flex-row gap-1.5">
-                        {" "}
-                        <Sparkles className="w-4 h-4" /> Generate{" "}
+                        <Sparkles className="w-4 h-4" /> Generate
                       </span>
                     )}
                   </Button>

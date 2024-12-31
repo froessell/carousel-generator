@@ -2,7 +2,7 @@
 import * as z from "zod";
 import React, { useEffect } from "react";
 import { DocumentSchema } from "@/lib/validation/document-schema";
-import { SIZE } from "@/lib/page-size";
+import { usePageSize } from "@/lib/page-size";
 import { usePagerContext } from "@/lib/providers/pager-context";
 import { cn } from "@/lib/utils";
 import { NewPage } from "@/components/pages/new-page";
@@ -30,14 +30,15 @@ import {
 export function Document({
   document,
   slidesFieldArray,
-  scale,
+  scale = 1,
 }: {
   document: z.infer<typeof DocumentSchema>;
   slidesFieldArray: SlidesFieldArrayReturn;
-  scale: number;
+  scale?: number;
 }) {
   const docReference = useRefContext();
   const [api, setApi] = React.useState<CarouselApi>();
+  const pageSize = usePageSize();
 
   const { currentPage } = usePagerContext();
   const { numPages } = useFieldArrayValues("slides");
@@ -49,7 +50,6 @@ export function Document({
 
   const { append, prepend } = slidesFieldArray;
   const newPageAsSideButton = numPages > 0;
-
   const fieldName = "slides";
 
   useEffect(() => {
@@ -60,7 +60,13 @@ export function Document({
   }, [currentPage, api]);
 
   return (
-    <div className=" flex flex-row justify-center w-full">
+    <div
+      className="relative flex flex-row items-center justify-center"
+      style={{
+        minWidth: `${400 + SLIDE_PADDING_X * 2}px`,
+        height: scale * (pageSize.height + PADDING_TOP + PADDING_BOTTOM),
+      }}
+    >
       <Carousel
         setApi={setApi}
         opts={{
@@ -71,7 +77,7 @@ export function Document({
           transform: `scale(${scale})`,
           transformOrigin: "top",
           minWidth: `${400 + SLIDE_PADDING_X * 2}px`,
-          height: scale * (SIZE.height + PADDING_TOP + PADDING_BOTTOM),
+          height: scale * (pageSize.height + PADDING_TOP + PADDING_BOTTOM),
         }}
       >
         <CarouselContent
@@ -84,17 +90,16 @@ export function Document({
           }}
         >
           <CarouselItem
-            className="pl-2 md:pl-4 "
+            className="pl-2 md:pl-4"
             id={"add-slide-1"}
             style={{
-              flex: `0 0 ${SIZE.width / 4 + PAGE_GAP_PX}px`,
+              flex: `0 0 ${pageSize.width / 4 + PAGE_GAP_PX}px`,
             }}
           >
             <NewPage
-              size={SIZE}
+              size={pageSize}
               className="px-2"
               handleAddPage={(pageType: SlideType) => {
-                // TODO: Should add with index at different locations and set as current page the index
                 prepend(getDefaultSlideOfType(pageType));
               }}
               isSideButton={newPageAsSideButton}
@@ -106,7 +111,7 @@ export function Document({
               className="pl-2 md:pl-4"
               id={`carousel-item-${index}`}
               style={{
-                flex: `0 0 ${SIZE.width + PAGE_GAP_PX}px`,
+                flex: `0 0 ${pageSize.width + PAGE_GAP_PX}px`,
               }}
             >
               <SlideMenubarWrapper
@@ -118,7 +123,7 @@ export function Document({
                   config={document.config}
                   slide={slide}
                   index={index}
-                  size={SIZE}
+                  size={pageSize}
                   fieldName={(fieldName + "." + index) as SlideFieldPath}
                   className={cn(
                     currentPage != index &&
@@ -129,17 +134,16 @@ export function Document({
             </CarouselItem>
           ))}
           <CarouselItem
-            className="pl-2 md:pl-4 "
+            className="pl-2 md:pl-4"
             id={"add-slide-2"}
             style={{
-              flex: `0 0 ${SIZE.width / 4 + PAGE_GAP_PX}px`,
+              flex: `0 0 ${pageSize.width / 4 + PAGE_GAP_PX}px`,
             }}
           >
             <NewPage
-              size={SIZE}
+              size={pageSize}
               className="px-2"
               handleAddPage={(pageType: SlideType) => {
-                // TODO: Should add with index at different locations and set as current page the index
                 append(getDefaultSlideOfType(pageType));
               }}
               isSideButton={newPageAsSideButton}
