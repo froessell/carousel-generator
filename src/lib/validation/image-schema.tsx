@@ -3,7 +3,7 @@ import * as z from "zod";
 
 const ImageDataUrlSchema = z
   .string()
-  .refine((dataUrl) => /^data:image\/[a-z]+;base64,/.test(dataUrl), {
+  .refine((dataUrl) => dataUrl.startsWith('data:image/'), {
     message: "Invalid data URL format. It should start with 'data:image/'.",
   });
 
@@ -38,10 +38,14 @@ export const ImageSourceSchema = z.object({
   type: ImageInputTypeSchema,
 });
 
+export const ImageSizeOption = z.enum(["Default", "FullWidth", "AlmostFullWidth"]);
+export type ImageSizeOption = z.infer<typeof ImageSizeOption>;
+
 export const ImageSchema = z.object({
   type: z.literal(ElementType.enum.Image).default(ElementType.enum.Image),
   source: ImageSourceSchema.default(DEFAULT_IMAGE_SOURCE),
   style: ImageStyleSchema.default({}),
+  size: ImageSizeOption.default("Default"),
 });
 
 export const ContentImageSchema = z.object({
@@ -50,6 +54,7 @@ export const ContentImageSchema = z.object({
     .default(ElementType.enum.ContentImage),
   source: ImageSourceSchema.default(DEFAULT_IMAGE_SOURCE),
   style: ContentImageStyleSchema.default({}),
+  size: ImageSizeOption.default("Default"),
 });
 
 export const DEFAULT_CONTENT_IMAGE_INPUT: z.infer<typeof ContentImageSchema> =

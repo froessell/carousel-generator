@@ -11,6 +11,10 @@ export function Signature({
   config: z.infer<typeof ConfigSchema>;
   className?: string;
 }) {
+  if (!config.brand.showBrand) {
+    return null;
+  }
+
   return (
     <div
       className={`flex justify-start flex-row gap-3 items-center ${cn(

@@ -4,7 +4,7 @@ import { SIZE } from "@/lib/page-size";
 import { useFieldArrayValues } from "@/lib/hooks/use-field-array-values";
 import { useFormContext } from "react-hook-form";
 import { DocumentFormReturn } from "@/lib/document-form-types";
-import { toCanvas } from "html-to-image";
+import { toCanvas, toJpeg } from "html-to-image";
 import { Options as HtmlToImageOptions } from "html-to-image/lib/types";
 import { jsPDF, jsPDFOptions } from "jspdf";
 
@@ -107,13 +107,7 @@ export function useComponentPrinter() {
   const { watch }: DocumentFormReturn = useFormContext();
 
   const [isPrinting, setIsPrinting] = React.useState(false);
-  // TODO: Show animation on loading
   const componentRef = React.useRef(null);
-
-  // Packages and references
-  // react-to-print: https://github.com/gregnb/react-to-print
-  // html-to-image: https://github.com/bubkoo/html-to-image
-  // jsPDF: https://rawgit.com/MrRio/jsPDF/master/docs/jsPDF.html
 
   const reactToPrintContent = React.useCallback(() => {
     const current = componentRef.current;
@@ -162,7 +156,6 @@ export function useComponentPrinter() {
       }
 
       const SCALE_TO_LINKEDIN_INTRINSIC_SIZE = 1.8;
-      // const fontEmbedCss = await getFontEmbedCSS(html);
       const options: HtmlToPdfOptions = {
         margin: [0, 0, 0, 0],
         filename: watch("filename"),
@@ -177,7 +170,6 @@ export function useComponentPrinter() {
         jsPDF: { unit: "px", format: [SIZE.width, SIZE.height] },
       };
 
-      // TODO Create buttons to download as png / svg / etc from 'html-to-image'
       const canvas = await toCanvas(html, options.htmlToImage).catch((err) => {
         console.error(err);
       });
@@ -185,16 +177,67 @@ export function useComponentPrinter() {
         console.error("Failed to create canvas");
         return;
       }
-      // DEBUG:
-      // document.body.appendChild(canvas);
       const pdf = canvasToPdf(canvas, options);
       pdf.save(options.filename);
     },
   });
 
+  const handleExportJpgs = async () => {
+    setIsPrinting(true);
+    try {
+      const contentDocument = document;
+      if (!contentDocument) {
+        console.error("Document not found");
+        return;
+      }
+
+      // Export each slide individually
+      for (let i = 0; i < numPages; i++) {
+        const slideElement = contentDocument.getElementById(`carousel-item-${i}`);
+        if (!slideElement) {
+          console.error(`Couldn't find slide ${i}`);
+          continue;
+        }
+
+        // Clone and clean up the slide element
+        const clone = slideElement.cloneNode(true) as HTMLElement;
+        proxyImgSources(clone);
+        removeSelectionStyleById(clone, "page-base-");
+        removeSelectionStyleById(clone, "content-image-");
+        removeAllById(clone, "element-menubar-");
+        removeAllById(clone, "slide-menubar-");
+        insertFonts(clone);
+
+        // Convert to JPG
+        const SCALE_TO_LINKEDIN_INTRINSIC_SIZE = 1.8;
+        const jpgOptions: HtmlToImageOptions = {
+          height: SIZE.height,
+          width: SIZE.width,
+          canvasHeight: SIZE.height * SCALE_TO_LINKEDIN_INTRINSIC_SIZE,
+          canvasWidth: SIZE.width * SCALE_TO_LINKEDIN_INTRINSIC_SIZE,
+          quality: 0.95,
+          backgroundColor: 'white'
+        };
+
+        const dataUrl = await toJpeg(clone, jpgOptions);
+        
+        // Create download link
+        const link = document.createElement('a');
+        link.download = `${watch("filename")}-slide-${i + 1}.jpg`;
+        link.href = dataUrl;
+        link.click();
+      }
+    } catch (error) {
+      console.error("Failed to export JPGs:", error);
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
   return {
     componentRef,
     handlePrint,
+    handleExportJpgs,
     isPrinting,
   };
 }

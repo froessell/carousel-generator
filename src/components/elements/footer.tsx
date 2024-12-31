@@ -13,6 +13,14 @@ const Footer = React.forwardRef<
     className?: string;
   }
 >(function Footer({ config, number, className }, ref) {
+  const showSignature = config.brand.showBrand;
+  const showPageNumber = config.pageNumber.showNumbers;
+
+  // If nothing to show, return null to avoid empty space
+  if (!showSignature && !showPageNumber) {
+    return null;
+  }
+
   return (
     <div
       ref={ref}
@@ -21,10 +29,8 @@ const Footer = React.forwardRef<
         className
       )}
     >
-      <Signature config={config} />
-      {config.pageNumber.showNumbers && (
-        <PageNumber config={config} number={number} />
-      )}
+      {showSignature && <Signature config={config} />}
+      {showPageNumber && <PageNumber config={config} number={number} />}
     </div>
   );
 });

@@ -1,7 +1,9 @@
+"use client";
+
 import React, { useState } from "react";
 import * as z from "zod";
 import { ConfigSchema } from "@/lib/validation/document-schema";
-import Footer from "../elements/footer";
+import Footer from "@/components/elements/footer";
 import { cn } from "@/lib/utils";
 import { CommonSlideSchema } from "@/lib/validation/slide-schema";
 import { BackgroundLayer } from "@/components/elements/background-layer";

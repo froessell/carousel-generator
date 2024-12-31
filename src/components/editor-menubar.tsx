@@ -27,7 +27,15 @@ import { useFieldsFileImporter } from "@/lib/hooks/use-fields-file-importer";
 import { usePagerContext } from "@/lib/providers/pager-context";
 import { defaultValues } from "@/lib/default-document";
 
-export function EditorMenubar({}: {}) {
+export function EditorMenubar({ 
+  handlePrint, 
+  handleExportJpgs, 
+  isPrinting 
+}: { 
+  handlePrint?: () => void; 
+  handleExportJpgs?: () => void;
+  isPrinting?: boolean; 
+}) {
   const { reset, watch }: DocumentFormReturn = useFormContext(); // retrieve those props
   const { setCurrentPage } = usePagerContext();
 
@@ -40,15 +48,12 @@ export function EditorMenubar({}: {}) {
     useFieldsFileImporter("slides");
 
   return (
-    // TODO: Add Here download and help
     <div className="flex items-center flex-row gap-2">
       <Menubar>
         <MenubarMenu>
           <MenubarTrigger>File</MenubarTrigger>
           <MenubarContent>
-            {/* <MenubarItem > */}
             <FilenameForm className={"text-left my-1"} />
-            {/* </MenubarItem> */}
             <MenubarSeparator />
             <JsonExporter
               values={watch("config")}
@@ -113,18 +118,44 @@ export function EditorMenubar({}: {}) {
             </Dialog>
 
             <MenubarSeparator />
+            {handlePrint && (
+              <MenubarItem onClick={handlePrint} disabled={isPrinting}>
+                {isPrinting ? (
+                  <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Export as PDF
+              </MenubarItem>
+            )}
+            {handleExportJpgs && (
+              <MenubarItem onClick={handleExportJpgs} disabled={isPrinting}>
+                {isPrinting ? (
+                  <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Export as JPGs
+              </MenubarItem>
+            )}
+            <MenubarSeparator />
 
             <MenubarItem
               onClick={() => {
-                reset(defaultValues);
+                reset({
+                  slides: defaultValues.slides,
+                  config: {
+                    ...defaultValues.config,
+                    theme: {
+                      ...defaultValues.config.theme,
+                      layout: {
+                        ...defaultValues.config.theme.layout,
+                        alignment: defaultValues.config.theme.layout.alignment as "Center" | "Top" | "Bottom"
+                      }
+                    }
+                  }
+                });
                 setCurrentPage(0);
               }}
             >
-              {/* TODO: This should have a confirmation alert dialog */}
               Reset to defaults
             </MenubarItem>
-            {/* <MenubarSeparator /> */}
-            {/* <MenubarItem>Print</MenubarItem> */}
           </MenubarContent>
         </MenubarMenu>
       </Menubar>

@@ -6,6 +6,7 @@ import {
   ObjectFitType,
   ImageSchema,
   ContentImageSchema,
+  ImageSizeOption,
 } from "@/lib/validation/image-schema";
 import { useSelectionContext } from "@/lib/providers/selection-context";
 import { getSlideNumber } from "@/lib/field-path";
@@ -15,6 +16,7 @@ import {
   DocumentFormReturn,
   ElementFieldPath,
 } from "@/lib/document-form-types";
+import { Image } from "lucide-react";
 
 export function ContentImage({
   fieldName,
@@ -23,46 +25,63 @@ export function ContentImage({
   fieldName: ElementFieldPath;
   className?: string;
 }) {
-  const form: DocumentFormReturn = useFormContext();
-  const { getValues } = form;
-  const image = getValues(fieldName) as z.infer<typeof ContentImageSchema>;
-
+  const { watch, setValue } = useFormContext();
+  const { setCurrentSelection } = useSelectionContext();
   const { setCurrentPage } = usePagerContext();
-  const { currentSelection, setCurrentSelection } = useSelectionContext();
+  const image = watch(`${fieldName}.source`);
+  const size = watch(`${fieldName}.size`) as ImageSizeOption;
+  const style = watch(`${fieldName}.style`);
+  const objectFit = style?.objectFit || "Cover";
   const pageNumber = getSlideNumber(fieldName);
-  const source = image.source.src || "https://placehold.co/400x200";
 
-  // TODO: Convert to Toggle to make it accessible. Control with selection
+  // Initialize style with objectFit if it doesn't exist
+  React.useEffect(() => {
+    if (!style?.objectFit) {
+      setValue(`${fieldName}.style`, { ...style, objectFit: "Cover" });
+    }
+  }, [style, fieldName, setValue]);
+
+  const sizeStyles = {
+    Default: "w-auto max-w-full",
+    FullWidth: "w-full",
+    AlmostFullWidth: "w-[98%] mx-auto",
+  };
+
+  const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    event.stopPropagation();
+    setCurrentSelection(fieldName, event);
+    setCurrentPage(pageNumber);
+  };
+
+  if (!image?.src) {
+    return (
+      <div 
+        className={cn(
+          "flex flex-col justify-center items-center h-32 gap-2 cursor-pointer hover:bg-muted/50 rounded-lg transition-colors", 
+          className
+        )}
+        onClick={handleClick}
+      >
+        <Image className="w-8 h-8 text-muted-foreground" />
+        <div className="text-muted-foreground text-sm">Click to add image</div>
+      </div>
+    );
+  }
 
   return (
-    <div
-      id={"content-image-" + fieldName}
-      className={cn(
-        "flex flex-col h-full w-full outline-transparent rounded-md ring-offset-background",
-        currentSelection == fieldName &&
-          "outline-input ring-2 ring-offset-2 ring-ring",
-        className
-      )}
+    <div 
+      className={cn("flex justify-center", className)}
+      onClick={handleClick}
     >
-      {/* // TODO: Extract to component */}
       <img
-        alt="slide image"
-        src={source} // TODO: Extract cover/contain into a setting for images
+        src={image.src}
+        alt="Content"
         className={cn(
-          // shadow-md or any box shadow not supported by html2canvas
-          "rounded-md overflow-hidden",
-          image.style.objectFit == ObjectFitType.enum.Cover
-            ? "object-cover w-full h-full"
-            : image.style.objectFit == ObjectFitType.enum.Contain
-            ? "object-contain w-fit h-fit"
-            : ""
+          "cursor-pointer", 
+          sizeStyles[size]
         )}
         style={{
-          opacity: image.style.opacity / 100,
-        }}
-        onClick={(event) => {
-          setCurrentPage(pageNumber);
-          setCurrentSelection(fieldName, event);
+          objectFit: objectFit.toLowerCase()
         }}
       />
     </div>
