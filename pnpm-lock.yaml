@@ -131,9 +131,12 @@ importers:
       next:
         specifier: 14.0.4
         version: 14.0.4(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      node-fetch:
+        specifier: '2'
+        version: 2.7.0(encoding@0.1.13)
       openai:
-        specifier: ^4.20.1
-        version: 4.22.1(encoding@0.1.13)
+        specifier: ^4.24.1
+        version: 4.77.0(encoding@0.1.13)(zod@3.22.2)
       postcss:
         specifier: 8.4.28
         version: 8.4.28
@@ -176,6 +179,9 @@ importers:
       typescript:
         specifier: 5.1.6
         version: 5.1.6
+      unsplash-js:
+        specifier: ^7.0.18
+        version: 7.0.19
       usehooks-ts:
         specifier: ^2.9.1
         version: 2.9.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -2945,9 +2951,14 @@ packages:
   once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
 
-  openai@4.22.1:
-    resolution: {integrity: sha512-Igk2FixXiEDQKkS3VJR0tTpO27O48mJqH4ztayATHTvcAmKqrIrYOjUBc7DrJcq+cKcQS5lTQalGZD05ySydHA==}
+  openai@4.77.0:
+    resolution: {integrity: sha512-WWacavtns/7pCUkOWvQIjyOfcdr9X+9n9Vvb0zFeKVDAqwCMDHB+iSr24SVaBAhplvSG6JrRXFpcNM9gWhOGIw==}
     hasBin: true
+    peerDependencies:
+      zod: ^3.23.8
+    peerDependenciesMeta:
+      zod:
+        optional: true
 
   openapi-types@12.1.3:
     resolution: {integrity: sha512-N4YtSYJqghVu4iek2ZUvcN/0aqH1kRDuNqzcycDxhOUpg7GdvLa2F3DgS6yBNhInhv2r/6I0Flkn7CqL8+nIcw==}
@@ -3584,6 +3595,10 @@ packages:
   unicode-trie@2.0.0:
     resolution: {integrity: sha512-x7bc76x0bm4prf1VLg79uhAzKw8DVboClSN5VxJuQ+LKDOVEW9CdH+VY7SP+vX7xCYQqzzgQpFqz15zeLvAtZQ==}
 
+  unsplash-js@7.0.19:
+    resolution: {integrity: sha512-j6qT2floy5Q2g2d939FJpwey1yw/GpQecFiSouyJtsHQPj3oqmqq3K4rI+GF8vU1zwGCT7ZwIGQd2dtCQLjYJw==}
+    engines: {node: '>=10'}
+
   update-browserslist-db@1.0.11:
     resolution: {integrity: sha512-dCwEFf0/oT85M1fHBg4F0jtLwJrutGoHSQXCh7u4o2t1drG+c0a9Flnqww6XUKSfQMPpJBRjU8d4RXB09qtvaA==}
     hasBin: true
@@ -3966,7 +3981,7 @@ snapshots:
     dependencies:
       '@langchain/core': 0.1.2
       js-tiktoken: 1.0.8
-      openai: 4.22.1(encoding@0.1.13)
+      openai: 4.77.0(encoding@0.1.13)(zod@3.22.4)
       zod: 3.22.4
       zod-to-json-schema: 3.20.3(zod@3.22.4)
     transitivePeerDependencies:
@@ -6539,17 +6554,31 @@ snapshots:
     dependencies:
       wrappy: 1.0.2
 
-  openai@4.22.1(encoding@0.1.13):
+  openai@4.77.0(encoding@0.1.13)(zod@3.22.2):
     dependencies:
       '@types/node': 18.19.3
       '@types/node-fetch': 2.6.9
       abort-controller: 3.0.0
       agentkeepalive: 4.5.0
-      digest-fetch: 1.3.0
       form-data-encoder: 1.7.2
       formdata-node: 4.4.1
       node-fetch: 2.7.0(encoding@0.1.13)
-      web-streams-polyfill: 3.2.1
+    optionalDependencies:
+      zod: 3.22.2
+    transitivePeerDependencies:
+      - encoding
+
+  openai@4.77.0(encoding@0.1.13)(zod@3.22.4):
+    dependencies:
+      '@types/node': 18.19.3
+      '@types/node-fetch': 2.6.9
+      abort-controller: 3.0.0
+      agentkeepalive: 4.5.0
+      form-data-encoder: 1.7.2
+      formdata-node: 4.4.1
+      node-fetch: 2.7.0(encoding@0.1.13)
+    optionalDependencies:
+      zod: 3.22.4
     transitivePeerDependencies:
       - encoding
 
@@ -7245,6 +7274,8 @@ snapshots:
     dependencies:
       pako: 0.2.9
       tiny-inflate: 1.0.3
+
+  unsplash-js@7.0.19: {}
 
   update-browserslist-db@1.0.11(browserslist@4.21.10):
     dependencies:

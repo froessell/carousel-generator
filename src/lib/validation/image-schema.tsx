@@ -24,6 +24,7 @@ export enum ImageInputType {
   Url = "URL",
   Upload = "UPLOAD",
   Generated = "GENERATED",
+  Unsplash = "UNSPLASH",
 }
 const ImageInputTypeSchema = z.nativeEnum(ImageInputType);
 

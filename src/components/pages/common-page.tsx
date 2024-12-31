@@ -47,19 +47,24 @@ export function CommonPage({
   const inputRefs = React.useRef<HTMLDivElement[]>([]);
   const offsetHeights = inputRefs.current.map((ref) => ref.offsetHeight);
 
+  const alignment = config.theme.layout.alignment;
+  const alignmentStyles = {
+    Top: "justify-start",
+    Center: "justify-center",
+    Bottom: "justify-end",
+  };
+
   React.useEffect(
     () => {
       const elementsHeights = inputRefs.current
         .filter((ref) => ref)
         .map((ref) => ref.offsetHeight);
-      // Gap between existent elements + 1 for the element to be introduced by add button
       const gapHeights = elementsHeights.length * LAYOUT_GAP;
       setElementsHeight(
         elementsHeights.reduce((acc, el) => acc + el, 0) + gapHeights
       );
     },
     [offsetHeights]
-    // TODO ADD dependencies
   );
   const remainingHeight = elementsHeight
     ? size.height - FRAME_PADDING * 2 - footerDimensions.height - elementsHeight
@@ -73,65 +78,66 @@ export function CommonPage({
       ) : null}
       <PageFrame
         fieldName={backgroundImageField}
-        className={cn("p-10", className)}
+        className={cn("p-10 flex flex-col h-full", className)}
       >
-        <PageLayout fieldName={backgroundImageField} className={"gap-2"}>
-          {slide.elements.map((element, index) => {
-            const currentField = (fieldName +
-              ".elements." +
-              index) as ElementFieldPath;
-            return element.type == ElementType.enum.Title ? (
-              <ElementMenubarWrapper
-                key={currentField}
-                fieldName={currentField}
-                ref={(el) => {
-                  el ? (inputRefs.current[index] = el) : null;
-                }}
-              >
-                <Title fieldName={currentField as TextFieldPath} />
-              </ElementMenubarWrapper>
-            ) : element.type == ElementType.enum.Subtitle ? (
-              <ElementMenubarWrapper
-                key={currentField}
-                fieldName={currentField}
-                ref={(el) => {
-                  el ? (inputRefs.current[index] = el) : null;
-                }}
-              >
-                <Subtitle fieldName={currentField as TextFieldPath} />
-              </ElementMenubarWrapper>
-            ) : element.type == ElementType.enum.Description ? (
-              <ElementMenubarWrapper
-                key={currentField}
-                fieldName={currentField}
-                ref={(el) => {
-                  el ? (inputRefs.current[index] = el) : null;
-                }}
-              >
-                <Description fieldName={currentField as TextFieldPath} />
-              </ElementMenubarWrapper>
-            ) : element.type == ElementType.enum.ContentImage ? (
-              <ElementMenubarWrapper
-                key={currentField}
-                fieldName={currentField}
-                ref={(el) => {
-                  el ? (inputRefs.current[index] = el) : null;
-                }}
-              >
-                <ContentImage
-                  fieldName={currentField as ElementFieldPath}
-                  className="h-40"
-                />
-              </ElementMenubarWrapper>
-            ) : null;
-          })}
-          {/* // TODO Replace 50 by the element size of element to introduce or minimum of all elements */}
-          {remainingHeight && remainingHeight >= 50 ? (
-            <AddElement
-              fieldName={(fieldName + ".elements") as ElementArrayFieldPath}
-            />
-          ) : null}
-        </PageLayout>
+        <div className={cn("flex-1 flex flex-col", alignmentStyles[alignment])}>
+          <PageLayout fieldName={backgroundImageField} className="gap-2">
+            {slide.elements.map((element, index) => {
+              const currentField = (fieldName +
+                ".elements." +
+                index) as ElementFieldPath;
+              return element.type == ElementType.enum.Title ? (
+                <ElementMenubarWrapper
+                  key={currentField}
+                  fieldName={currentField}
+                  ref={(el) => {
+                    el ? (inputRefs.current[index] = el) : null;
+                  }}
+                >
+                  <Title fieldName={currentField as TextFieldPath} />
+                </ElementMenubarWrapper>
+              ) : element.type == ElementType.enum.Subtitle ? (
+                <ElementMenubarWrapper
+                  key={currentField}
+                  fieldName={currentField}
+                  ref={(el) => {
+                    el ? (inputRefs.current[index] = el) : null;
+                  }}
+                >
+                  <Subtitle fieldName={currentField as TextFieldPath} />
+                </ElementMenubarWrapper>
+              ) : element.type == ElementType.enum.Description ? (
+                <ElementMenubarWrapper
+                  key={currentField}
+                  fieldName={currentField}
+                  ref={(el) => {
+                    el ? (inputRefs.current[index] = el) : null;
+                  }}
+                >
+                  <Description fieldName={currentField as TextFieldPath} />
+                </ElementMenubarWrapper>
+              ) : element.type == ElementType.enum.ContentImage ? (
+                <ElementMenubarWrapper
+                  key={currentField}
+                  fieldName={currentField}
+                  ref={(el) => {
+                    el ? (inputRefs.current[index] = el) : null;
+                  }}
+                >
+                  <ContentImage
+                    fieldName={currentField as ElementFieldPath}
+                    className="h-40"
+                  />
+                </ElementMenubarWrapper>
+              ) : null;
+            })}
+            {remainingHeight && remainingHeight >= 50 ? (
+              <AddElement
+                fieldName={(fieldName + ".elements") as ElementArrayFieldPath}
+              />
+            ) : null}
+          </PageLayout>
+        </div>
         <Footer number={index + 1} config={config} ref={footerRef} />
       </PageFrame>
     </PageBase>

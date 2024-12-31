@@ -16,7 +16,10 @@ const Footer = React.forwardRef<
   return (
     <div
       ref={ref}
-      className={cn("flex flex-row justify-between items-center", className)}
+      className={cn(
+        "flex flex-row justify-between items-center",
+        className
+      )}
     >
       <Signature config={config} />
       {config.pageNumber.showNumbers && (
