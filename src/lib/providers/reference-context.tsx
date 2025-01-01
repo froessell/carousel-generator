@@ -1,25 +1,30 @@
-import React, { createContext, useContext, useRef, ReactNode } from "react";
+'use client';
 
-// Create a context for the ref
-const RefContext = createContext<React.RefObject<HTMLInputElement> | null>(
-  null
-);
+import React, { createContext, useContext } from "react";
 
-// Custom hook to access the ref value
-export function useRefContext() {
-  const context = useContext(RefContext);
-  if (!context) {
-    throw new Error("useRefContext must be used within a RefProvider");
-  }
-  return context;
+interface ReferenceContextType {
+  myRef: React.RefObject<HTMLElement>;
 }
 
-// The RefProvider component
+const ReferenceContext = createContext<ReferenceContextType | undefined>(undefined);
+
 interface RefProviderProps {
-  children: ReactNode;
-  myRef: React.RefObject<HTMLInputElement>;
+  children: React.ReactNode;
+  myRef: React.RefObject<HTMLElement>;
 }
 
 export function RefProvider({ children, myRef }: RefProviderProps) {
-  return <RefContext.Provider value={myRef}>{children}</RefContext.Provider>;
+  return (
+    <ReferenceContext.Provider value={{ myRef }}>
+      {children}
+    </ReferenceContext.Provider>
+  );
+}
+
+export function useReference() {
+  const context = useContext(ReferenceContext);
+  if (context === undefined) {
+    throw new Error("useReference must be used within a RefProvider");
+  }
+  return context;
 }

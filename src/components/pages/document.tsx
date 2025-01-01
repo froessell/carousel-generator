@@ -14,7 +14,7 @@ import { SlideType } from "@/lib/validation/slide-schema";
 
 import { getDefaultSlideOfType } from "@/lib/default-slides";
 import { useFieldArrayValues } from "@/lib/hooks/use-field-array-values";
-import { useRefContext } from "@/lib/providers/reference-context";
+import { useReference } from "@/lib/providers/reference-context";
 import { CommonPage } from "@/components/pages/common-page";
 import SlideMenubarWrapper from "@/components/slide-menubar-wrapper";
 
@@ -36,7 +36,7 @@ export function Document({
   slidesFieldArray: SlidesFieldArrayReturn;
   scale?: number;
 }) {
-  const docReference = useRefContext();
+  const { myRef } = useReference();
   const [api, setApi] = React.useState<CarouselApi>();
   const pageSize = usePageSize();
 
@@ -81,7 +81,7 @@ export function Document({
         }}
       >
         <CarouselContent
-          ref={docReference}
+          ref={myRef}
           id="element-to-download-as-pdf"
           className="-ml-2 md:-ml-4 flex-1"
           style={{

@@ -1,14 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { useReactToPrint } from "react-to-print";
-import { SIZE } from "@/lib/page-size";
 import { useFieldArrayValues } from "@/lib/hooks/use-field-array-values";
 import { useFormContext } from "react-hook-form";
 import { DocumentFormReturn } from "@/lib/document-form-types";
-import { toCanvas, toJpeg } from "html-to-image";
+import { toCanvas } from "html-to-image";
 import { Options as HtmlToImageOptions } from "html-to-image/lib/types";
 import { jsPDF, jsPDFOptions } from "jspdf";
-
-// TODO: Create a reusable component and package with this code
+import { toast } from "sonner";
 
 type HtmlToPdfOptions = {
   margin: [number, number, number, number];
@@ -72,8 +70,7 @@ function canvasToPdf(canvas: HTMLCanvasElement, opt: HtmlToPdfOptions) {
     // Trim the final page to reduce file size.
     if (page === nPages - 1 && pxFullHeight % pxPageHeight !== 0) {
       pageCanvas.height = pxFullHeight % pxPageHeight;
-      pageHeight =
-        (pageCanvas.height * pdfPageSize.inner.width) / pageCanvas.width;
+      pageHeight = (pageCanvas.height * pdfPageSize.inner.width) / pageCanvas.width;
     }
 
     // Display the page.
@@ -86,26 +83,27 @@ function canvasToPdf(canvas: HTMLCanvasElement, opt: HtmlToPdfOptions) {
 
     // Add the page to the PDF.
     if (page) pdf.addPage();
-    var imgData = pageCanvas.toDataURL(
-      "image/" + opt.image.type,
-      opt.image.quality
-    );
-    pdf.addImage(
-      imgData,
-      opt.image.type,
-      opt.margin[1],
-      opt.margin[0],
-      pdfPageSize.inner.width,
-      pageHeight
-    );
+    var imgData = pageCanvas.toDataURL("image/" + opt.image.type, opt.image.quality);
+    pdf.addImage(imgData, opt.image.type, opt.margin[1], opt.margin[0], pdfPageSize.inner.width, pageHeight);
   }
   return pdf;
 }
 
-export function useComponentPrinter() {
-  const { numPages } = useFieldArrayValues("slides");
-  const { watch }: DocumentFormReturn = useFormContext();
+async function waitForImagesLoaded(element: HTMLElement) {
+  const images = Array.from(element.getElementsByTagName('img')) as HTMLImageElement[];
+  const loadPromises = images.map(img => {
+    if (img.complete) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+    });
+  });
+  await Promise.all(loadPromises);
+}
 
+export function useComponentPrinter() {
+  const form = useFormContext<DocumentFormReturn>();
+  const { numPages } = useFieldArrayValues("slides");
   const [isPrinting, setIsPrinting] = React.useState(false);
   const componentRef = React.useRef(null);
 
@@ -141,7 +139,7 @@ export function useComponentPrinter() {
     removeAfterPrint: true,
     onBeforePrint: () => setIsPrinting(true),
     onAfterPrint: () => setIsPrinting(false),
-    pageStyle: `@page { size: ${SIZE.width}px ${SIZE.height}px;  margin: 0; } @media print { body { -webkit-print-color-adjust: exact; }}`,
+    pageStyle: `@page { size: ${form.watch("config.size.width")}px ${form.watch("config.size.height")}px;  margin: 0; } @media print { body { -webkit-print-color-adjust: exact; }}`,
     print: async (printIframe) => {
       const contentDocument = printIframe.contentDocument;
       if (!contentDocument) {
@@ -155,19 +153,23 @@ export function useComponentPrinter() {
         return;
       }
 
+      // Wait for all images to load
+      await waitForImagesLoaded(html);
+
       const SCALE_TO_LINKEDIN_INTRINSIC_SIZE = 1.8;
+      const size = form.watch("config.size");
       const options: HtmlToPdfOptions = {
         margin: [0, 0, 0, 0],
-        filename: watch("filename"),
+        filename: form.watch("filename"),
         image: { type: "webp", quality: 0.98 },
         htmlToImage: {
-          height: SIZE.height * numPages,
-          width: SIZE.width,
-          canvasHeight:
-            SIZE.height * numPages * SCALE_TO_LINKEDIN_INTRINSIC_SIZE,
-          canvasWidth: SIZE.width * SCALE_TO_LINKEDIN_INTRINSIC_SIZE,
+          height: size.height * numPages,
+          width: size.width,
+          canvasHeight: size.height * numPages * SCALE_TO_LINKEDIN_INTRINSIC_SIZE,
+          canvasWidth: size.width * SCALE_TO_LINKEDIN_INTRINSIC_SIZE,
+          cacheBust: true
         },
-        jsPDF: { unit: "px", format: [SIZE.width, SIZE.height] },
+        jsPDF: { unit: "px", format: [size.width, size.height] },
       };
 
       const canvas = await toCanvas(html, options.htmlToImage).catch((err) => {
@@ -182,57 +184,89 @@ export function useComponentPrinter() {
     },
   });
 
-  const handleExportJpgs = async () => {
-    setIsPrinting(true);
-    try {
-      const contentDocument = document;
+  const handleExportJpgs = useReactToPrint({
+    content: reactToPrintContent,
+    removeAfterPrint: true,
+    onBeforePrint: () => setIsPrinting(true),
+    onAfterPrint: () => setIsPrinting(false),
+    pageStyle: `@page { size: ${form.watch("config.size.width")}px ${form.watch("config.size.height")}px;  margin: 0; } @media print { body { -webkit-print-color-adjust: exact; }}`,
+    print: async (printIframe) => {
+      const contentDocument = printIframe.contentDocument;
       if (!contentDocument) {
-        console.error("Document not found");
+        console.error("iFrame does not have a document content");
         return;
       }
 
-      // Export each slide individually
-      for (let i = 0; i < numPages; i++) {
-        const slideElement = contentDocument.getElementById(`carousel-item-${i}`);
-        if (!slideElement) {
-          console.error(`Couldn't find slide ${i}`);
-          continue;
+      const html = contentDocument.getElementById("element-to-download-as-pdf");
+      if (!html) {
+        console.error("Couldn't find element to convert to PDF");
+        return;
+      }
+
+      // Wait for all images to load
+      await waitForImagesLoaded(html);
+
+      const SCALE_TO_LINKEDIN_INTRINSIC_SIZE = 1.8;
+      const size = form.watch("config.size");
+      const options: HtmlToPdfOptions = {
+        margin: [0, 0, 0, 0],
+        filename: form.watch("filename"),
+        image: { type: "webp", quality: 0.98 },
+        htmlToImage: {
+          height: size.height * numPages,
+          width: size.width,
+          canvasHeight: size.height * numPages * SCALE_TO_LINKEDIN_INTRINSIC_SIZE,
+          canvasWidth: size.width * SCALE_TO_LINKEDIN_INTRINSIC_SIZE,
+          cacheBust: true
+        },
+        jsPDF: { unit: "px", format: [size.width, size.height] },
+      };
+
+      // Convert to canvas using the same method as PDF
+      const canvas = await toCanvas(html, options.htmlToImage).catch((err) => {
+        console.error(err);
+      });
+      if (!canvas) {
+        console.error("Failed to create canvas");
+        return;
+      }
+
+      // Get the PDF page size (we'll use this for slicing the canvas)
+      const pdfPageSize = getPdfPageSize(options);
+      const pxPageHeight = Math.floor(canvas.width * pdfPageSize.inner.ratio);
+
+      // Create a temporary canvas for individual slides
+      const pageCanvas = document.createElement("canvas");
+      const pageCtx = pageCanvas.getContext("2d");
+      if (!pageCtx) {
+        throw Error("Canvas context of created element not found");
+      }
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = pxPageHeight;
+
+      // Extract each page as JPG using the same logic as PDF generation
+      for (let page = 0; page < numPages; page++) {
+        // Handle the last page height
+        if (page === numPages - 1 && canvas.height % pxPageHeight !== 0) {
+          pageCanvas.height = canvas.height % pxPageHeight;
         }
 
-        // Clone and clean up the slide element
-        const clone = slideElement.cloneNode(true) as HTMLElement;
-        proxyImgSources(clone);
-        removeSelectionStyleById(clone, "page-base-");
-        removeSelectionStyleById(clone, "content-image-");
-        removeAllById(clone, "element-menubar-");
-        removeAllById(clone, "slide-menubar-");
-        insertFonts(clone);
+        // Use the same drawing logic as PDF generation
+        const w = pageCanvas.width;
+        const h = pageCanvas.height;
+        pageCtx.fillStyle = "white";
+        pageCtx.fillRect(0, 0, w, h);
+        pageCtx.drawImage(canvas, 0, page * pxPageHeight, w, h, 0, 0, w, h);
 
-        // Convert to JPG
-        const SCALE_TO_LINKEDIN_INTRINSIC_SIZE = 1.8;
-        const jpgOptions: HtmlToImageOptions = {
-          height: SIZE.height,
-          width: SIZE.width,
-          canvasHeight: SIZE.height * SCALE_TO_LINKEDIN_INTRINSIC_SIZE,
-          canvasWidth: SIZE.width * SCALE_TO_LINKEDIN_INTRINSIC_SIZE,
-          quality: 0.95,
-          backgroundColor: 'white'
-        };
-
-        const dataUrl = await toJpeg(clone, jpgOptions);
-        
-        // Create download link
+        // Convert to JPG and save
+        const imgData = pageCanvas.toDataURL("image/jpeg", 0.95);
         const link = document.createElement('a');
-        link.download = `${watch("filename")}-slide-${i + 1}.jpg`;
-        link.href = dataUrl;
+        link.download = `${form.watch("filename")}-slide-${page + 1}.jpg`;
+        link.href = imgData;
         link.click();
       }
-    } catch (error) {
-      console.error("Failed to export JPGs:", error);
-    } finally {
-      setIsPrinting(false);
-    }
-  };
+    },
+  });
 
   return {
     componentRef,
@@ -242,8 +276,8 @@ export function useComponentPrinter() {
   };
 }
 
-function proxyImgSources(html: HTMLElement) {
-  // @ts-ignore
+// Make proxyImgSources async to ensure images are loaded
+async function proxyImgSources(html: HTMLElement) {
   const images = Array.from(
     html.getElementsByTagName("img")
   ) as HTMLImageElement[];
@@ -253,13 +287,20 @@ function proxyImgSources(html: HTMLElement) {
     (image) => !image.src.startsWith("/") && !image.src.startsWith("data:")
   );
 
-  // TODO: Make a single request with the list of images
-  externalImages.forEach((image) => {
-    const apiRequestURL = new URL(`${url}/api/proxy`);
-    apiRequestURL.searchParams.set("url", image.src);
-    // TODO: Consider using the cache of fetch
-    image.src = apiRequestURL.toString();
+  // Wait for all images to load
+  const loadPromises = externalImages.map(image => {
+    return new Promise((resolve, reject) => {
+      const newImage = new Image();
+      newImage.onload = resolve;
+      newImage.onerror = reject;
+      const apiRequestURL = new URL(`${url}/api/proxy`);
+      apiRequestURL.searchParams.set("url", image.src);
+      newImage.src = apiRequestURL.toString();
+      image.src = newImage.src;
+    });
   });
+
+  await Promise.all(loadPromises);
 }
 
 function removeAllById(html: HTMLElement, id: string) {
@@ -299,10 +340,10 @@ function removeClassnames(element: HTMLDivElement, classNames: string): string {
 }
 
 function insertFonts(element: HTMLElement) {
-  // Get all elements in the document
+  // Get all elements with font classes
   const allElements = Array.from(
-    element.getElementsByTagName(`textarea`)
-  ) as HTMLTextAreaElement[];
+    element.querySelectorAll(`[class*="font-"]`)
+  ) as HTMLElement[];
 
   // Iterate through each element
   allElements.forEach(function (element) {

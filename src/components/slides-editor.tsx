@@ -21,6 +21,7 @@ import { AIPanel } from "@/components/ai-panel";
 import { useEffect, useState } from "react";
 import { useStatusContext } from "@/lib/providers/editor-status-context";
 import { DocumentSkeleton } from "@/components/editor-skeleton";
+import { useReference } from "@/lib/providers/reference-context";
 
 interface SlidesEditorProps {}
 
@@ -41,6 +42,7 @@ export function SlidesEditor({}: SlidesEditorProps) {
   });
   const { setCurrentSelection } = useSelectionContext();
   const { status, setStatus } = useStatusContext();
+  const { myRef } = useReference();
 
   useEffect(() => {
     setStatus("ready");
